@@ -1,16 +1,18 @@
-# Notes-App
+# Notes-App <small>1.0.0</small>
 
-A ReactJs app to create notes and handle them.
-The original idea is from a video on Youtube and it had the following features:
+A ReactJs app to create notes and handle them. it contains the following features:
 - add note.
 - delete note.
-
-Then i added my own features:
 - add a Title to the note.
 - view the detail of the note.
 - edit the title and the note.
 - Toggle Layout button to toggle between the notes layout(Grid or flex).
 - the edited note will show at first.
+- dark mode.
 
-The link of the video:
-https://youtu.be/8KB3DHI-QbM
+## Running the app:
+npm start
+
+## Screenshots
+![ss1](./images/Screenshot%202023-12-11%20140012.png)
+![ss2](./images/Screenshot%202023-12-11%20140034.png)
