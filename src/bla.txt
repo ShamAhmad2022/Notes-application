@@ -1,0 +1,516 @@
+import React, { useState, useEffect } from 'react';
+import NoteList from "./components/NoteList";
+import { nanoid } from 'nanoid';
+import SearchBar from './components/SearhBar';
+import Header from './components/Header';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import NoteDetails from './components/NoteDetails';
+import EditNote from './components/EditNote';
+
+
+function App() {
+
+  // const [notes, setNotes] = useState([{
+  //   id: nanoid(),
+  //   title:"Dazai Osamu",
+  //   text: "this is my first note.. yay!",
+  //   date: "12/02/2022"
+  // },
+  // {
+  //   id: nanoid(),
+  //   title:"Ross Gellar",
+  //   text: "today i saw a very cute little puppy!",
+  //   date: "04/05/2022"
+  // },
+  // {
+  //   id: nanoid(),
+  //   title:"Farid al-Atrash",
+  //   text: "today i was playing Detroit bacome human",
+  //   date: "21/08/2022"
+  // }, {
+  //   id: nanoid(),
+  //   title:"Liam Nasson",
+  //   text: "today i met someone special",
+  //   date: "15/09/2022"
+  // }]);
+
+  const [notes, setNotes] = useState([]);
+
+  const [searchcontent, setSearchcontent] = useState('');
+
+  const [darkModeToggle, setDarkModeToggle] = useState(false); //boolean 
+
+  useEffect(() => {
+    const savesNotes = JSON.parse(localStorage.getItem('react-notes-app-data'));
+    if (savesNotes) {
+      setNotes(savesNotes);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    localStorage.setItem('react-notes-app-data', JSON.stringify(notes));
+  }, [notes]);
+
+
+  const AddNewNote = (noteTitle, noteText) => {
+    // const date= new Date();
+
+    // const newNote = {
+    //   id:nanoid(),
+    //   text:noteText,
+    //   date:date.toLocaleDateString()
+    // };
+
+    // const notesarray = [...notes, newNote];
+
+    // setNotes(notesarray);
+
+    setNotes([{
+      id: nanoid(),
+      title: noteTitle,
+      text: noteText,
+      date: new Date().toLocaleDateString()
+    }, ...notes]);
+  }
+
+  const deleteNote = (id) => {
+    const newnotesafterdelete = notes.filter((note) => note.id !== id);
+    setNotes(newnotesafterdelete);
+  }
+
+  // const saveEditednote = (iidd, editedNote) => {
+
+  //   const notesselectedarray = notes.filter((note) => note.id === iidd);
+  //   const notesselected = notesselectedarray[0];
+  //   notesselected=editedNote
+    
+  //   setNotes(notesselected);
+  // }
+
+  //id from there
+  //editing here
+
+  const saveEditedNote = (NoteId, newTitle, newText) => {
+    const notesselectedarray = notes.filter((note) => note.id === NoteId);
+    const notesselected = notesselectedarray[0];
+
+    notesselected.title=newTitle;
+    notesselected.text=newText;
+    notesselected.date=new Date().toLocaleDateString();
+    console.log("notesselected");
+    console.log(notesselected);
+
+
+    console.log("notes");
+    console.log(notes);
+  }
+
+  return (
+
+    <BrowserRouter>
+      <div className={`${darkModeToggle === true && 'dark-mode'}`}>
+        <div className="container">
+          <Header setDarkModeTogglefunction={setDarkModeToggle} />
+          <SearchBar setSearchcontentFunction={setSearchcontent} />
+          <Routes>
+            <Route exact path='/' element={<NoteList notes={notes.filter((note) => note.text.toLocaleLowerCase().includes(searchcontent))} AddNewNoteFun={AddNewNote} deleteNotefun={deleteNote}
+            />} />
+            <Route exact path='/viewnote/:noteId' element={<NoteDetails notes={notes} />}/>
+            <Route exact path='/editnote/:noteId' element={<EditNote notes={notes} saveEditedNote={saveEditedNote}/>} />
+          </Routes>
+        </div>
+      </div>
+    </BrowserRouter>
+
+  );
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+
+function EditNote({ notes, saveEditedNote }) {
+
+    const { noteId } = useParams();
+
+    const notesselectedarray = notes.filter((note) => note.id === noteId);
+    const notesselected = notesselectedarray[0];
+
+    const [newTitle, setNewTitle] = useState(notesselected.title);
+    const characterLimitForNoteTitle = 30;
+
+    const [newText, setNewText] = useState(notesselected.text);
+    const characterLimitForNoteText = 200;
+
+
+    const onchangeTitle = (event) => {
+        if (characterLimitForNoteTitle - event.target.value.length >= 0) {
+            setNewTitle(event.target.value);
+        }
+    }
+
+
+    const onchangeText = (event) => {
+        if (characterLimitForNoteText - event.target.value.length >= 0) {
+            setNewText(event.target.value);
+        }
+    }
+
+    const remainingCharactersForNotetitle = characterLimitForNoteTitle - newTitle.length;
+
+    const remainingCharactersForNoteText = characterLimitForNoteText - newText.length;
+
+
+    const saveNote = () => {
+        if (newTitle.trim().length > 0 && newText.trim().length > 0) {
+            // notesselected.title=newTitle;
+            // notesselected.text=newText;
+            // notesselected.date=new Date().toLocaleDateString();
+
+            saveEditedNote(noteId, newTitle, newText);
+        }
+    }
+
+    return (
+        <div>
+            <div className='note-details note-edit-inputs'>
+                <div className='note-details-flex'>
+                    <div className='note-details-title-and-date'>
+                        <input type='text' value={newTitle} onChange={onchangeTitle} />
+                        <small>{remainingCharactersForNotetitle}/30</small>
+                    </div>
+
+                </div>
+
+                <textarea cols='156' value={newText} onChange={onchangeText}></textarea>
+                <small>{remainingCharactersForNoteText}/200</small>
+                <div className='note-details-flex-buttons'>
+                    <Link to={`/viewnote/${noteId}`} class="btn btn-light note-details-button">back</Link>
+                    <Link to={`/viewnote/${noteId}`} class="btn btn-light note-details-button" onClick={saveNote}>Save</Link>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default EditNote
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+App.js after before all the comments:
+
+import React, { useState, useEffect } from 'react';
+import NoteList from "./components/NoteList";
+import { nanoid } from 'nanoid';
+import SearchBar from './components/SearhBar';
+import Header from './components/Header';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import NoteDetails from './components/NoteDetails';
+import EditNote from './components/EditNote';
+
+
+function App() {
+
+  // const [notes, setNotes] = useState([{
+  //   id: nanoid(),
+  //   title:"Dazai Osamu",
+  //   text: "this is my first note.. yay!",
+  //   date: "12/02/2022"
+  // },
+  // {
+  //   id: nanoid(),
+  //   title:"Ross Gellar",
+  //   text: "today i saw a very cute little puppy!",
+  //   date: "04/05/2022"
+  // },
+  // {
+  //   id: nanoid(),
+  //   title:"Farid al-Atrash",
+  //   text: "today i was playing Detroit bacome human",
+  //   date: "21/08/2022"
+  // }, {
+  //   id: nanoid(),
+  //   title:"Liam Nasson",
+  //   text: "today i met someone special",
+  //   date: "15/09/2022"
+  // }]);
+
+  const [notes, setNotes] = useState([]);
+
+  const [searchcontent, setSearchcontent] = useState('');
+
+  const [darkModeToggle, setDarkModeToggle] = useState(false); //boolean 
+
+  useEffect(() => {
+    const savesNotes = JSON.parse(localStorage.getItem('react-notes-app-data'));
+    if (savesNotes) {
+      setNotes(savesNotes);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    localStorage.setItem('react-notes-app-data', JSON.stringify(notes));
+  }, [notes]);
+
+
+  const AddNewNote = (noteTitle, noteText) => {
+    // const date= new Date();
+
+    // const newNote = {
+    //   id:nanoid(),
+    //   text:noteText,
+    //   date:date.toLocaleDateString()
+    // };
+
+    // const notesarray = [...notes, newNote];
+
+    // setNotes(notesarray);
+
+    setNotes([{
+      id: nanoid(),
+      title: noteTitle,
+      text: noteText,
+      date: new Date().toLocaleDateString()
+    }, ...notes]);
+  }
+
+  const deleteNote = (id) => {
+    const newnotesafterdelete = notes.filter((note) => note.id !== id);
+    setNotes(newnotesafterdelete);
+  }
+
+  // const saveEditednote = (iidd, editedNote) => {
+
+  //   const notesselectedarray = notes.filter((note) => note.id === iidd);
+  //   const notesselected = notesselectedarray[0];
+  //   notesselected=editedNote
+    
+  //   setNotes(notesselected);
+  // }
+
+  //id from there
+  //editing here
+
+  const saveEditedNote = (NoteId, newTitle, newText) => {
+    const notesselectedarray = notes.filter((note) => note.id === NoteId);
+    const notesselected = notesselectedarray[0];
+
+    notesselected.title=newTitle;
+    notesselected.text=newText;
+    notesselected.date=new Date().toLocaleDateString();
+    console.log("notesselected");
+    console.log(notesselected);
+
+
+    console.log("notes");
+    console.log(notes);
+  }
+
+  return (
+
+    <BrowserRouter>
+      <div className={`${darkModeToggle === true && 'dark-mode'}`}>
+        <div className="container">
+          <Header setDarkModeTogglefunction={setDarkModeToggle} />
+          <SearchBar setSearchcontentFunction={setSearchcontent} />
+          <Routes>
+            <Route exact path='/' element={<NoteList notes={notes.filter((note) => note.text.toLocaleLowerCase().includes(searchcontent))} AddNewNoteFun={AddNewNote} deleteNotefun={deleteNote}
+            />} />
+            <Route exact path='/viewnote/:noteId' element={<NoteDetails notes={notes} />}/>
+            <Route exact path='/editnote/:noteId' element={<EditNote notes={notes} saveEditedNote={saveEditedNote}/>} />
+          </Routes>
+        </div>
+      </div>
+    </BrowserRouter>
+
+  );
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+before trying the flex/grid in one component:
+11111
+
+import React, { useState, useEffect } from 'react';
+import NoteList from "./components/NoteList";
+import { nanoid } from 'nanoid';
+import SearchBar from './components/SearhBar';
+import Header from './components/Header';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import NoteDetails from './components/NoteDetails';
+import EditNote from './components/EditNote';
+import NoteListFlex from './components/NoteListFlex';
+
+
+function App() {
+
+  const [notes, setNotes] = useState([]);
+  const [searchcontent, setSearchcontent] = useState('');
+  const [darkModeToggle, setDarkModeToggle] = useState(false); //boolean 
+  
+
+  useEffect(() => {
+    const savesNotes = JSON.parse(localStorage.getItem('react-notes-app-data'));
+    if (savesNotes) {
+      setNotes(savesNotes);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('react-notes-app-data', JSON.stringify(notes));
+  }, [notes]);
+
+
+  const AddNewNote = (noteTitle, noteText) => {
+    setNotes([{
+      id: nanoid(),
+      title: noteTitle,
+      text: noteText,
+      date: new Date().toLocaleDateString()
+    }, ...notes]);
+  }
+
+  const deleteNote = (id) => {
+    const newnotesafterdelete = notes.filter((note) => note.id !== id);
+    setNotes(newnotesafterdelete);
+  }
+
+
+  const saveEditedNote = (NoteId, newTitle, newText) => {
+
+  //  const newarray = notes.filter(note=>note.id !== NoteId);
+  //  const ob1= {
+  //   id: NoteId,
+  //   title: newTitle,
+  //   text: newText,
+  //   date: new Date().toLocaleDateString()
+  //  }
+
+  //  newarray.push(ob1);
+
+  //  console.log("newarray");
+  //  console.log(newarray);
+
+  //  setNotes(newarray);
+
+    let newestarray = notes.map(function(note){
+      if(note.id !== NoteId){
+        return note;
+      }
+      else{
+        return {
+          id: NoteId,
+          title: newTitle,
+          text: newText,
+          date: new Date().toLocaleDateString()
+        };
+      }
+    })
+    
+    setNotes(newestarray);
+    //or set the value of the local storage :  localStorage.setItem
+
+    newestarray= newestarray.splice(0, 0, newestarray.splice(newestarray.findIndex(object => object.id === NoteId), 1)[0]);
+    
+    
+    // setNotes(newestarray);
+
+  // const newarray = notes.map(note => ((note.id !== NoteId) ? note : {
+  //   id: NoteId,
+  //   title: newTitle,
+  //   text: newText,
+  //   date: new Date().toLocaleDateString()
+  // })
+  // );
+
+  // setNotes(newarray);
+
+
+  }
+  
+  const [flexToggle, setFlexToggle] = useState(true); //boolean
+
+
+  return (
+
+    <BrowserRouter>
+      <div className={`${darkModeToggle === true && 'dark-mode'}`}>
+        <div className="container">
+          <Header setDarkModeTogglefunction={setDarkModeToggle} setFlexToggle={setFlexToggle} flexToggle={flexToggle}/>
+          <SearchBar setSearchcontentFunction={setSearchcontent} />
+          <Routes>
+            {flexToggle?<Route exact path='/' element={<NoteList notes={notes.filter((note) => note.text.toLocaleLowerCase().includes(searchcontent) || note.title.toLocaleLowerCase().includes(searchcontent))} AddNewNoteFun={AddNewNote} deleteNotefun={deleteNote}
+            />} />:
+             <Route exact path='/' element={<NoteListFlex notes={notes.filter((note) => note.text.toLocaleLowerCase().includes(searchcontent) || note.title.toLocaleLowerCase().includes(searchcontent))} AddNewNoteFun={AddNewNote} deleteNotefun={deleteNote} 
+            />} />}
+            <Route exact path='/viewnote/:noteId' element={<NoteDetails notes={notes} />} />
+            <Route exact path='/editnote/:noteId' element={<EditNote notes={notes} saveEditedNote={saveEditedNote} />} />
+          </Routes>
+        </div>
+      </div>
+    </BrowserRouter>
+
+  );
+}
+
+export default App;
+
+22222
+
+import React from 'react';
+import { Button } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+
+function Header( {setDarkModeTogglefunction, setFlexToggle, flexToggle} ) {
+  return (
+    <div className='header'>
+        <h1>NotesApp</h1>
+        <Button variant="secondary" onClick={()=> setDarkModeTogglefunction((previousValue)=> !previousValue)}>Dark mode</Button>
+        <Link to='/' class="btn btn-dark" onClick={()=> setFlexToggle((previousValue)=> !previousValue)}>Toggle Layout</Link>
+        {/* <button class="btn btn-dark" onClick={()=> setFlexToggle((previousValue)=> !previousValue)}>Toggle Layout</button> */}
+        {console.log("hehe: ")}
+        {console.log(flexToggle)}
+    </div>
+  )
+}
+
+export default Header;
